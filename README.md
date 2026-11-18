@@ -115,7 +115,7 @@ its Staff Fatigue Index. The analytics therefore score patients exactly as the p
 |------|------|
 | [`notebooks/hospital_queue_eda.ipynb`](notebooks/hospital_queue_eda.ipynb) | Full EDA with 7 charts and ANOVA, χ² and paired t-tests |
 | [`dashboard/Hospital_Queue_KPI_Report.xlsx`](dashboard/Hospital_Queue_KPI_Report.xlsx) | Excel report: KPI summary, pivot summaries, heatmap, native charts |
-| [`dashboard/powerbi_measures.dax`](dashboard/powerbi_measures.dax) | 14 DAX measures (P90 wait, no-show rate, fatigue index, 7-day MA, WoW %) |
+| [`dashboard/powerbi_measures.dax`](dashboard/powerbi_measures.dax) | 13 DAX measures (P90 wait, no-show rate, fatigue index, 7-day MA, WoW %) |
 | [`docs/index.html`](docs/index.html) | Interactive web dashboard ([live](https://shashankpabba6.github.io/hospital-queue-data-analytics/)): 6 KPI cards, slicers, tooltips, data tables, light/dark |
 | [`dashboard/POWERBI_DASHBOARD.md`](dashboard/POWERBI_DASHBOARD.md) | 3-page Power BI layout with 6 KPI visuals; model CSVs in `dashboard/powerbi_data/` |
 | [`reports/figures/`](reports/figures) | Exported charts |
