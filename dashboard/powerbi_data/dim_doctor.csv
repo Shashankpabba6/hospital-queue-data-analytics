@@ -1,0 +1,13 @@
+doctor_id,name,department_id,shift_hours,base_consult_min
+DOC01,Dr. Aarav Rao,4,8,11.3
+DOC02,Dr. Meera Iyer,4,8,16.0
+DOC03,Dr. Rohan Reddy,4,8,11.7
+DOC04,Dr. Kavya Sharma,6,8,10.8
+DOC05,Dr. Arjun Nair,6,8,8.4
+DOC06,Dr. Ananya Gupta,1,8,13.4
+DOC07,Dr. Vikram Menon,1,8,15.2
+DOC08,Dr. Sneha Verma,5,8,11.7
+DOC09,Dr. Karthik Das,5,8,12.0
+DOC10,Dr. Divya Patel,7,8,12.1
+DOC11,Dr. Nikhil Joshi,3,8,9.6
+DOC12,Dr. Priya Kulkarni,2,8,8.5

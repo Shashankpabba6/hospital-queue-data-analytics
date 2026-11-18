@@ -1,0 +1,13 @@
+doctor_id,name,specialization,shift_hours,base_consult_min
+DOC01,Dr. Aarav Rao,General Medicine,8,11.3
+DOC02,Dr. Meera Iyer,General Medicine,8,16.0
+DOC03,Dr. Rohan Reddy,General Medicine,8,11.7
+DOC04,Dr. Kavya Sharma,Pediatrics,8,10.8
+DOC05,Dr. Arjun Nair,Pediatrics,8,8.4
+DOC06,Dr. Ananya Gupta,Cardiology,8,13.4
+DOC07,Dr. Vikram Menon,Cardiology,8,15.2
+DOC08,Dr. Sneha Verma,Orthopedics,8,11.7
+DOC09,Dr. Karthik Das,Orthopedics,8,12.0
+DOC10,Dr. Divya Patel,Pulmonology,8,12.1
+DOC11,Dr. Nikhil Joshi,ENT,8,9.6
+DOC12,Dr. Priya Kulkarni,Dermatology,8,8.5

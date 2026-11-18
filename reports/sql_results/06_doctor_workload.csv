@@ -1,0 +1,13 @@
+name,department_name,patients_per_day,avg_consult_min,fatigue_pct,consult_min_vs_dept_avg,slowest_in_dept
+Dr. Aarav Rao,General Medicine,45.3,13.0,123.0,-1.9,3
+Dr. Meera Iyer,General Medicine,30.4,18.4,117.0,3.5,1
+Dr. Rohan Reddy,General Medicine,35.9,13.3,100.0,-1.6,2
+Dr. Kavya Sharma,Pediatrics,27.8,12.7,74.0,1.4,1
+Dr. Ananya Gupta,Cardiology,20.5,16.0,69.0,-1.4,2
+Dr. Divya Patel,Pulmonology,20.9,15.0,65.0,0.0,1
+Dr. Sneha Verma,Orthopedics,23.1,13.1,63.0,-0.3,2
+Dr. Vikram Menon,Cardiology,11.3,18.7,44.0,1.4,1
+Dr. Arjun Nair,Pediatrics,19.8,9.8,40.0,-1.4,2
+Dr. Nikhil Joshi,ENT,16.9,10.4,37.0,0.0,1
+Dr. Karthik Das,Orthopedics,12.6,13.6,36.0,0.3,1
+Dr. Priya Kulkarni,Dermatology,17.6,9.3,34.0,0.0,1

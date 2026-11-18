@@ -1,0 +1,18 @@
+step,rows_affected,note
+extract: raw rows,27872,
+remove duplicate submissions,166,
+standardise department labels,1173,
+unmapped departments (dropped),0,
+convert fever F -> C,549,values > 45 treated as Fahrenheit
+invalid SpO2 -> null,83,outside 50-100%
+invalid age -> null,55,outside 0-110
+impute missing fever (dept median),277,
+impute missing spo2 (dept median),497,
+impute missing age (dept median),55,
+validate: appointment_id unique,0,PASS
+validate: no nulls in vitals,0,PASS
+validate: fever within 34-43 C,0,PASS
+validate: spo2 within 50-100,0,PASS
+validate: severity within 1-5,0,PASS
+validate: departments valid,0,PASS
+load: clean rows,27706,

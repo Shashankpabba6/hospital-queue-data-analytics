@@ -1,0 +1,8 @@
+department_name,doctors,avg_daily_visits,visits_per_doctor_day,avg_wait_min,pct_over_30min,no_show_pct,wait_rank
+General Medicine,3,125.8,41.9,16.9,18.3,11.3,1
+Pulmonology,1,22.0,22.0,9.4,8.8,4.9,2
+Cardiology,2,32.3,16.2,3.9,2.4,1.5,3
+ENT,1,17.2,17.2,2.7,0.6,1.7,4
+Orthopedics,2,36.0,18.0,2.1,0.8,0.7,5
+Dermatology,1,17.8,17.8,2.1,0.5,1.1,6
+Pediatrics,2,48.0,24.0,2.0,0.7,0.8,7

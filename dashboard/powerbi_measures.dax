@@ -1,0 +1,63 @@
+// ============================================================
+// Power BI measures - Hospital Queue Analytics
+// Model: fact_appointment (*)-(1) dim_date, dim_department, dim_doctor
+// Load the CSVs in dashboard/powerbi_data/ via Get Data > Folder,
+// then create relationships on date_key, department_id, doctor_id.
+// ============================================================
+
+Total Bookings = COUNTROWS ( fact_appointment )
+
+Completed Visits =
+    CALCULATE ( COUNTROWS ( fact_appointment ), fact_appointment[status] = "completed" )
+
+No Shows =
+    CALCULATE ( COUNTROWS ( fact_appointment ), fact_appointment[status] = "no_show" )
+
+No Show Rate % =
+    DIVIDE ( [No Shows], [Completed Visits] + [No Shows] )
+
+Avg Wait (min) =
+    CALCULATE ( AVERAGE ( fact_appointment[waiting_time_min] ), fact_appointment[status] = "completed" )
+
+P90 Wait (min) =
+    CALCULATE (
+        PERCENTILEX.INC ( fact_appointment, fact_appointment[waiting_time_min], 0.9 ),
+        fact_appointment[status] = "completed"
+    )
+
+% Waits Over 30 min =
+    DIVIDE (
+        CALCULATE ( [Completed Visits], fact_appointment[waiting_time_min] > 30 ),
+        [Completed Visits]
+    )
+
+Avg Consult (min) = AVERAGE ( fact_appointment[consult_duration_min] )
+
+Patients per Doctor per Day =
+    DIVIDE (
+        [Completed Visits],
+        DISTINCTCOUNT ( fact_appointment[doctor_id] ) * DISTINCTCOUNT ( fact_appointment[date_key] )
+    )
+
+// Staff Fatigue Index, same definition as the app (consult minutes / shift minutes)
+Fatigue Index % =
+    DIVIDE (
+        SUMX ( VALUES ( dim_doctor[doctor_id] ),
+            CALCULATE ( SUM ( fact_appointment[consult_duration_min] ) ) ),
+        SUMX ( VALUES ( dim_doctor[doctor_id] ),
+            CALCULATE ( DISTINCTCOUNT ( fact_appointment[date_key] ) ) * MAX ( dim_doctor[shift_hours] ) * 60 )
+    )
+
+Critical Patients (Sev 4-5) =
+    CALCULATE ( COUNTROWS ( fact_appointment ), fact_appointment[severity_score] >= 4 )
+
+Visits 7D MA =
+    AVERAGEX (
+        DATESINPERIOD ( dim_date[full_date], MAX ( dim_date[full_date] ), -7, DAY ),
+        CALCULATE ( [Total Bookings] )
+    )
+
+Visits WoW % =
+    VAR cur = [Total Bookings]
+    VAR prev = CALCULATE ( [Total Bookings], DATEADD ( dim_date[full_date], -7, DAY ) )
+    RETURN DIVIDE ( cur - prev, prev )

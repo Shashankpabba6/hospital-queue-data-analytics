@@ -1,0 +1,11 @@
+day_name,arrival_hour,visits,avg_wait_min,slot_rank
+Monday,10,668,22.0,1
+Monday,11,490,19.7,2
+Tuesday,10,580,18.5,3
+Thursday,10,526,16.0,4
+Wednesday,10,539,15.8,5
+Monday,9,580,15.6,6
+Tuesday,11,447,15.5,7
+Monday,12,403,14.2,8
+Thursday,11,432,14.2,9
+Wednesday,11,376,13.2,10

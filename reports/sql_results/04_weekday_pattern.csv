@@ -1,0 +1,8 @@
+day_name,avg_daily_visits,avg_wait_min,pct_vs_avg_day
+Monday,406.0,14.8,35.7
+Tuesday,335.0,10.5,12.2
+Wednesday,306.0,8.3,2.3
+Thursday,307.0,8.6,2.6
+Friday,313.0,7.4,4.5
+Saturday,255.0,6.0,-14.7
+Sunday,172.0,1.9,-42.4
