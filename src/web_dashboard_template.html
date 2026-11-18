@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hospital Queue Analytics Dashboard</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface-1: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --series-1: #2a78d6; --series-2: #eb6834; --wash: rgba(42,120,214,0.08);
+  --seq: #cde2fb,#b7d3f6,#9ec5f4,#86b6ef,#6da7ec,#5598e7,#3987e5,#2a78d6,#256abf,#1c5cab,#184f95,#104281,#0d366b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --wash: rgba(57,135,229,0.14);
+    --seq: #0d366b,#104281,#184f95,#1c5cab,#256abf,#2a78d6,#3987e5,#5598e7,#6da7ec,#86b6ef,#9ec5f4,#b7d3f6,#cde2fb;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --series-1: #3987e5; --series-2: #d95926; --wash: rgba(57,135,229,0.14);
+  --seq: #0d366b,#104281,#184f95,#1c5cab,#256abf,#2a78d6,#3987e5,#5598e7,#6da7ec,#86b6ef,#9ec5f4,#b7d3f6,#cde2fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root { background: var(--page); color: var(--ink); min-height: 100vh;
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px clamp(12px, 3vw, 40px) 48px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+h1 { font-size: 22px; margin: 0; }
+.sub { color: var(--ink-2); margin: 2px 0 0; }
+.sub a { color: var(--series-1); }
+.filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.filters label { color: var(--ink-2); font-size: 12px; display: flex; flex-direction: column; gap: 3px; }
+select, button { font: inherit; color: var(--ink); background: var(--surface-1); border: 1px solid var(--ring);
+  border-radius: 8px; padding: 6px 10px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--grid); margin: 8px 0 16px; }
+.tab { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 14px;
+  color: var(--ink-2); cursor: pointer; font-weight: 600; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--series-1); }
+.page { display: none; } .page.active { display: grid; gap: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.card { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.kpi .label { color: var(--ink-2); font-size: 12px; }
+.kpi .value { font-size: 28px; font-weight: 650; margin-top: 2px; }
+.kpi .note { color: var(--muted); font-size: 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px; }
+.card h2 { font-size: 14px; margin: 0 0 2px; }
+.card .desc { color: var(--ink-2); font-size: 12px; margin: 0 0 8px; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key-line { width: 16px; height: 0; border-top: 2px solid; }
+.key-line.dashed { border-top-style: dashed; }
+.key-rect { width: 10px; height: 10px; border-radius: 2px; }
+svg { display: block; width: 100%; overflow: visible; }
+svg text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+svg .val { fill: var(--ink-2); }
+details { margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+summary { cursor: pointer; }
+table { border-collapse: collapse; width: 100%; margin-top: 6px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); }
+th { color: var(--ink-2); font-weight: 600; }
+td.num, th.num { text-align: right; }
+#tip { position: fixed; pointer-events: none; background: var(--surface-1); border: 1px solid var(--ring);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  opacity: 0; transition: opacity .1s; z-index: 10; min-width: 120px; }
+#tip .t { color: var(--ink-2); margin-bottom: 4px; }
+#tip .row { display: flex; align-items: center; gap: 8px; }
+#tip .row b { color: var(--ink); font-size: 13px; }
+.hit { fill: transparent; cursor: default; }
+.hit:focus { outline: none; }
+.mark-hover { filter: brightness(1.15); }
+footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
+footer a { color: var(--series-1); }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <header>
+    <div>
+      <h1>Hospital Queue Analytics</h1>
+      <p class="sub">Outpatient queue KPIs · 90 days · simulated data mirroring the
+        <a href="https://github.com/Shashankpabba6/ai-smart-hospital-queue-management-system">Smart Hospital Queue app</a> schema</p>
+    </div>
+    <div class="filters">
+      <label>Department<select id="f-dept"></select></label>
+      <label>Date range<select id="f-range"></select></label>
+      <label>Theme<button id="f-theme" type="button">Auto</button></label>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-page="p1">1 · Operations overview</button>
+    <button class="tab" role="tab" aria-selected="false" data-page="p2">2 · Bottlenecks</button>
+    <button class="tab" role="tab" aria-selected="false" data-page="p3">3 · Doctor workload</button>
+  </div>
+
+  <section id="p1" class="page active">
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <h2>Daily visits</h2>
+      <p class="desc">Bookings that reached the queue (excludes cancellations). Mondays peak every week.</p>
+      <div class="legend"><span><i class="key-line" style="border-color:var(--series-1);opacity:.45"></i>Daily visits</span>
+        <span><i class="key-line" style="border-color:var(--series-1)"></i>7-day moving average</span></div>
+      <div id="c-trend"></div>
+      <details><summary>Show data table</summary><div id="t-trend"></div></details>
+    </div>
+  </section>
+
+  <section id="p2" class="page">
+    <div class="card">
+      <h2>Average waiting time by weekday and arrival hour (min)</h2>
+      <p class="desc">Completed visits. The Monday-morning rush is the worst slot.</p>
+      <div class="legend" id="heat-legend"></div>
+      <div id="c-heat"></div>
+      <details><summary>Show data table</summary><div id="t-heat"></div></details>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Average waiting time by department (min)</h2>
+        <p class="desc">Completed visits, all departments for the date range; the selected department is highlighted.</p>
+        <div id="c-dept"></div>
+        <details><summary>Show data table</summary><div id="t-dept"></div></details>
+      </div>
+      <div class="card">
+        <h2>Average arrivals per day by hour</h2>
+        <p class="desc" id="hour-desc"></p>
+        <div id="c-hour"></div>
+        <details><summary>Show data table</summary><div id="t-hour"></div></details>
+      </div>
+    </div>
+  </section>
+
+  <section id="p3" class="page">
+    <div class="card">
+      <h2>Staff Fatigue Index (% of 8-hour shift spent consulting)</h2>
+      <p class="desc">Same definition as the app: consultation minutes ÷ shift minutes, per working day.</p>
+      <div class="legend"><span><i class="key-line dashed" style="border-color:var(--ink-2)"></i>100% of shift</span>
+        <span><i class="key-rect" style="background:var(--series-2)"></i>≥ 90% (over capacity)</span>
+        <span><i class="key-rect" style="background:var(--series-1)"></i>&lt; 90%</span></div>
+      <div id="c-fat"></div>
+    </div>
+    <div class="card">
+      <h2>Doctor workload</h2>
+      <div id="t-doc"></div>
+    </div>
+  </section>
+
+  <footer>Built from <a href="https://github.com/Shashankpabba6/hospital-queue-data-analytics">hospital-queue-data-analytics</a>.
+    Measures match <code>dashboard/powerbi_measures.dax</code>.</footer>
+  <div id="tip" role="status"></div>
+</div>
+
+<script>
+const D = __DATA__;
+const N = D.d.length, DAYS = D.dates.length;
+const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const HOURS = Array.from({length: 12}, (_, i) => i + 8);
+const state = {dept: -1, d0: 0, d1: DAYS - 1};
+const css = n => getComputedStyle(document.querySelector(".viz-root")).getPropertyValue(n).trim();
+const fmt = (v, d = 1) => v == null || isNaN(v) ? "–" : v.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d});
+const hourLabel = h => `${h % 12 || 12}${h < 12 ? "a" : "p"}`;
+
+// ---------- filters ----------
+const fDept = document.getElementById("f-dept"), fRange = document.getElementById("f-range");
+[["All departments", -1], ...D.depts.map((n, i) => [n, i])].forEach(([n, v]) => fDept.add(new Option(n, v)));
+const months = {};
+D.dates.forEach((d, i) => { const m = d.slice(0, 7); (months[m] ||= [i, i])[1] = i; });
+const ranges = [["All 90 days", 0, DAYS - 1], ["Last 30 days", DAYS - 30, DAYS - 1],
+  ...Object.entries(months).map(([m, [a, b]]) => [new Date(m + "-01T00:00").toLocaleString("en", {month: "long", year: "numeric"}), a, b])];
+ranges.forEach(([n], i) => fRange.add(new Option(n, i)));
+fDept.onchange = () => { state.dept = +fDept.value; render(); };
+fRange.onchange = () => { const r = ranges[+fRange.value]; state.d0 = r[1]; state.d1 = r[2]; render(); };
+const themes = ["Auto", "Light", "Dark"]; let ti = 0;
+document.getElementById("f-theme").onclick = e => {
+  ti = (ti + 1) % 3; e.target.textContent = themes[ti];
+  if (ti === 0) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = themes[ti].toLowerCase();
+  render();
+};
+function showPage(id) {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x.dataset.page === id));
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === id));
+}
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => { history.replaceState(null, "", "#" + t.dataset.page); showPage(t.dataset.page); render(); });
+if (["#p1", "#p2", "#p3"].includes(location.hash)) showPage(location.hash.slice(1));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render());
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+
+function each(fn, {ignoreDept = false} = {}) {
+  for (let i = 0; i < N; i++) {
+    const d = D.d[i];
+    if (d < state.d0 || d > state.d1) continue;
+    if (!ignoreDept && state.dept >= 0 && D.p[i] !== state.dept) continue;
+    fn(i);
+  }
+}
+
+// ---------- tooltip ----------
+const tip = document.getElementById("tip");
+function showTip(ev, title, rows) {
+  tip.replaceChildren();
+  const t = document.createElement("div"); t.className = "t"; t.textContent = title; tip.append(t);
+  rows.forEach(([value, label, color, dashed]) => {
+    const r = document.createElement("div"); r.className = "row";
+    if (color) { const k = document.createElement("i"); k.className = "key-line" + (dashed ? " dashed" : ""); k.style.borderColor = color; r.append(k); }
+    const b = document.createElement("b"); b.textContent = value; r.append(b);
+    const s = document.createElement("span"); s.textContent = label; s.style.color = css("--ink-2"); r.append(s);
+    tip.append(r);
+  });
+  const x = ev.clientX ?? ev.target.getBoundingClientRect().right, y = ev.clientY ?? ev.target.getBoundingClientRect().top;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.min(innerWidth - w - 8, x + 14) + "px";
+  tip.style.top = Math.max(8, y - h - 10) + "px";
+  tip.style.opacity = 1;
+}
+const hideTip = () => tip.style.opacity = 0;
+
+// ---------- svg helpers ----------
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.append(e);
+  return e;
+}
+function txt(parent, x, y, s, attrs = {}) { const t = el("text", {x, y, ...attrs}, parent); t.textContent = s; return t; }
+function makeSvg(id, h) {
+  const box = document.getElementById(id); box.replaceChildren();
+  const w = Math.max(280, box.clientWidth);
+  const s = el("svg", {viewBox: `0 0 ${w} ${h}`, height: h}, box);
+  return [s, w];
+}
+// Bar with 4px rounding only on the data end; the baseline end stays square.
+function barPath(x, y, w, h, horizontal) {
+  const r = Math.min(4, horizontal ? h / 2 : w / 2, horizontal ? w : h);
+  if (w <= 0 || h <= 0) return "";
+  return horizontal
+    ? `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`
+    : `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+// Axis scale with round steps (1, 2, 2.5, 5 x 10^k)
+function niceScale(max, n = 4) {
+  const raw = (max || 1) / n, p = 10 ** Math.floor(Math.log10(raw)), f = raw / p;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  const top = Math.ceil(max / step) * step, ticks = [];
+  for (let v = 0; v <= top + step / 2; v += step) ticks.push(+v.toFixed(2));
+  return {max: top, ticks};
+}
+function hoverable(node, onEnter) {
+  node.setAttribute("tabindex", 0);
+  node.addEventListener("pointermove", onEnter); node.addEventListener("focus", onEnter);
+  node.addEventListener("pointerleave", hideTip); node.addEventListener("blur", hideTip);
+}
+function table(id, head, rows, numCols = []) {
+  const box = document.getElementById(id); box.replaceChildren();
+  const t = document.createElement("table"), tr = t.insertRow();
+  head.forEach((h, i) => { const th = document.createElement("th"); th.textContent = h; if (numCols.includes(i)) th.className = "num"; tr.append(th); });
+  rows.forEach(r => { const row = t.insertRow(); r.forEach((v, i) => { const c = row.insertCell(); c.textContent = v; if (numCols.includes(i)) c.className = "num"; }); });
+  box.append(t);
+}
+
+// ---------- page 1 ----------
+function renderKpis() {
+  let total = 0, comp = 0, ns = 0, crit = 0, over30 = 0, wsum = 0; const waits = [];
+  each(i => {
+    total++; if (D.s[i] >= 4) crit++;
+    if (D.st[i] === 0) { comp++; const w = D.w[i] / 10; wsum += w; waits.push(w); if (w > 30) over30++; }
+    else if (D.st[i] === 1) ns++;
+  });
+  waits.sort((a, b) => a - b);
+  const p90 = waits.length ? waits[Math.min(waits.length - 1, Math.ceil(0.9 * waits.length) - 1)] : NaN;
+  const cards = [
+    ["Total bookings", total.toLocaleString(), `${comp.toLocaleString()} completed`],
+    ["Avg wait", fmt(wsum / comp) + " min", "completed visits"],
+    ["P90 wait", fmt(p90) + " min", "9 in 10 patients wait less"],
+    ["Waits over 30 min", fmt(100 * over30 / comp) + "%", `${over30.toLocaleString()} patients`],
+    ["No-show rate", fmt(100 * ns / (comp + ns)) + "%", "walk-outs while waiting"],
+    ["Critical patients", crit.toLocaleString(), "severity 4–5"],
+  ];
+  const box = document.getElementById("kpis"); box.replaceChildren();
+  cards.forEach(([l, v, n]) => {
+    const c = document.createElement("div"); c.className = "card kpi";
+    [["label", l], ["value", v], ["note", n]].forEach(([cls, s]) => { const d = document.createElement("div"); d.className = cls; d.textContent = s; c.append(d); });
+    box.append(c);
+  });
+}
+
+function renderTrend() {
+  const daily = new Array(DAYS).fill(0);
+  for (let i = 0; i < N; i++) if (D.st[i] !== 2 && (state.dept < 0 || D.p[i] === state.dept)) daily[D.d[i]]++;
+  const ma = daily.map((_, i) => { const a = daily.slice(Math.max(0, i - 6), i + 1); return a.reduce((x, y) => x + y, 0) / a.length; });
+  const idx = []; for (let i = state.d0; i <= state.d1; i++) idx.push(i);
+  const H = 260, m = {l: 40, r: 12, t: 10, b: 26};
+  const [s, W] = makeSvg("c-trend", H), iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const sc = niceScale(Math.max(...idx.map(i => daily[i]))), ymax = sc.max;
+  const X = i => m.l + (idx.length < 2 ? iw / 2 : (i - state.d0) / (idx.length - 1) * iw), Y = v => m.t + ih - v / ymax * ih;
+  sc.ticks.forEach(v => {
+    el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: css(v ? "--grid" : "--axis"), "stroke-width": 1}, s);
+    txt(s, m.l - 6, Y(v) + 4, v, {"text-anchor": "end"});
+  });
+  const step = Math.max(1, Math.round(idx.length / 8));
+  idx.forEach((d, j) => { if (j % step === 0) txt(s, X(d), H - 8, new Date(D.dates[d] + "T00:00").toLocaleDateString("en", {day: "numeric", month: "short"}), {"text-anchor": "middle"}); });
+  const path = arr => idx.map((d, j) => `${j ? "L" : "M"}${X(d)},${Y(arr[d])}`).join("");
+  el("path", {d: path(daily), fill: "none", stroke: css("--series-1"), "stroke-width": 1.5, opacity: .45}, s);
+  el("path", {d: path(ma), fill: "none", stroke: css("--series-1"), "stroke-width": 2, "stroke-linejoin": "round"}, s);
+  const cross = el("line", {y1: m.t, y2: m.t + ih, stroke: css("--axis"), "stroke-width": 1, opacity: 0}, s);
+  const dot1 = el("circle", {r: 4, fill: css("--series-1"), stroke: css("--surface-1"), "stroke-width": 2, opacity: 0}, s);
+  const dot2 = el("circle", {r: 4, fill: css("--series-1"), stroke: css("--surface-1"), "stroke-width": 2, opacity: 0}, s);
+  const hit = el("rect", {x: m.l, y: m.t, width: iw, height: ih, class: "hit"}, s);
+  const move = ev => {
+    const r = s.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    const d = Math.max(state.d0, Math.min(state.d1, Math.round(state.d0 + (px - m.l) / iw * (idx.length - 1))));
+    [cross, dot1, dot2].forEach(n => n.setAttribute("opacity", 1));
+    cross.setAttribute("x1", X(d)); cross.setAttribute("x2", X(d));
+    dot1.setAttribute("cx", X(d)); dot1.setAttribute("cy", Y(daily[d]));
+    dot2.setAttribute("cx", X(d)); dot2.setAttribute("cy", Y(ma[d]));
+    const dt = new Date(D.dates[d] + "T00:00").toLocaleDateString("en", {weekday: "short", day: "numeric", month: "short"});
+    showTip(ev, dt, [[daily[d].toLocaleString(), "visits", css("--series-1")], [fmt(ma[d]), "7-day average", css("--series-1")]]);
+  };
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerleave", () => { hideTip(); [cross, dot1, dot2].forEach(n => n.setAttribute("opacity", 0)); });
+  table("t-trend", ["Date", "Visits", "7-day avg"], idx.map(d => [D.dates[d], daily[d], fmt(ma[d])]), [1, 2]);
+}
+
+// ---------- page 2 ----------
+function renderHeat() {
+  const sum = Array.from({length: 7}, () => new Array(12).fill(0)), cnt = Array.from({length: 7}, () => new Array(12).fill(0));
+  each(i => { if (D.st[i] === 0) { const w = D.weekday[D.d[i]], h = D.h[i] - 8; sum[w][h] += D.w[i] / 10; cnt[w][h]++; } });
+  const avg = sum.map((r, w) => r.map((v, h) => cnt[w][h] ? v / cnt[w][h] : null));
+  const max = Math.max(...avg.flat().filter(v => v != null), 1);
+  const ramp = css("--seq").split(",").map(x => x.trim());
+  const lg = document.getElementById("heat-legend"); lg.replaceChildren();
+  const mk = (t) => { const sp = document.createElement("span"); sp.textContent = t; return sp; };
+  const grad = document.createElement("span");
+  grad.style.cssText = `width:120px;height:10px;border-radius:2px;background:linear-gradient(90deg,${ramp.join(",")})`;
+  lg.append(mk("0 min"), grad, mk(`${Math.round(max)} min avg wait`));
+  const H = 250, m = {l: 40, r: 4, t: 4, b: 22};
+  const [s, W] = makeSvg("c-heat", H), cw = (W - m.l - m.r) / 12, ch = (H - m.t - m.b) / 7;
+  avg.forEach((row, w) => {
+    txt(s, m.l - 8, m.t + w * ch + ch / 2 + 4, WD[w], {"text-anchor": "end"});
+    row.forEach((v, h) => {
+      const x = m.l + h * cw, y = m.t + w * ch;
+      const k = v == null ? 0 : Math.min(ramp.length - 1, Math.round(v / max * (ramp.length - 1)));
+      const cell = el("rect", {x: x + 1, y: y + 1, width: cw - 2, height: ch - 2, rx: 3, fill: v == null ? css("--grid") : ramp[k]}, s);
+      const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+      const light = dark ? k < 7 : k >= 7;
+      if (v != null && cw > 26) txt(s, x + cw / 2, y + ch / 2 + 4, Math.round(v), {"text-anchor": "middle", style: `fill:${light ? "#ffffff" : "#0b0b0b"}`});
+      hoverable(cell, ev => { cell.classList.add("mark-hover"); showTip(ev, `${WD[w]} ${hourLabel(h + 8)}–${hourLabel(h + 9)}`, [[fmt(v) + " min", "avg wait"], [cnt[w][h].toLocaleString(), "visits"]]); });
+      cell.addEventListener("pointerleave", () => cell.classList.remove("mark-hover"));
+    });
+  });
+  HOURS.forEach((h, j) => txt(s, m.l + j * cw + cw / 2, H - 6, hourLabel(h), {"text-anchor": "middle"}));
+  table("t-heat", ["Day", ...HOURS.map(hourLabel)], avg.map((r, w) => [WD[w], ...r.map(v => fmt(v))]), HOURS.map((_, i) => i + 1));
+}
+
+function hbar(id, items, {unit = "", digits = 1, highlight = () => false, ref = null, H = null, tipRows}) {
+  const rowH = 26, m = {l: 0, r: 46, t: 4, b: 20};
+  const box = document.getElementById(id); box.replaceChildren();
+  const probe = el("svg", {}, box), labelW = Math.max(...items.map(it => { const t = txt(probe, 0, 0, it.label); const w = t.getComputedTextLength(); return w; })) + 10; probe.remove();
+  m.l = labelW;
+  const h = H || m.t + m.b + items.length * rowH;
+  const [s, W] = makeSvg(id, h), iw = W - m.l - m.r;
+  const sc = niceScale(Math.max(...items.map(i => i.value), ref || 0)), xmax = sc.max;
+  const X = v => m.l + v / xmax * iw;
+  sc.ticks.forEach(v => { el("line", {x1: X(v), x2: X(v), y1: m.t, y2: h - m.b, stroke: css(v ? "--grid" : "--axis")}, s); txt(s, X(v), h - 6, v + unit, {"text-anchor": "middle"}); });
+  items.forEach((it, j) => {
+    const y = m.t + j * rowH + 5, bh = rowH - 10;
+    txt(s, m.l - 8, y + bh / 2 + 4, it.label, {"text-anchor": "end", style: `fill:${css("--ink-2")}`});
+    const bar = el("path", {d: barPath(m.l, y, X(it.value) - m.l, bh, true), fill: css(highlight(it) ? "--series-2" : "--series-1")}, s);
+    txt(s, X(it.value) + 5, y + bh / 2 + 4, fmt(it.value, digits) + unit, {class: "val"});
+    const hit = el("rect", {x: 0, y: y - 4, width: W, height: rowH, class: "hit"}, s);
+    hoverable(hit, ev => { bar.classList.add("mark-hover"); showTip(ev, it.label, tipRows(it)); });
+    hit.addEventListener("pointerleave", () => bar.classList.remove("mark-hover"));
+  });
+  if (ref != null) { el("line", {x1: X(ref), x2: X(ref), y1: m.t, y2: h - m.b, stroke: css("--ink-2"), "stroke-dasharray": "4 3"}, s); }
+}
+
+function renderDept() {
+  const sum = new Array(D.depts.length).fill(0), cnt = new Array(D.depts.length).fill(0), n = new Array(D.depts.length).fill(0);
+  each(i => { if (D.st[i] === 0) { sum[D.p[i]] += D.w[i] / 10; cnt[D.p[i]]++; } if (D.st[i] !== 2) n[D.p[i]]++; }, {ignoreDept: true});
+  const items = D.depts.map((label, i) => ({label, i, value: cnt[i] ? sum[i] / cnt[i] : 0, visits: n[i]})).sort((a, b) => b.value - a.value);
+  hbar("c-dept", items, {unit: "", highlight: it => it.i === state.dept,
+    tipRows: it => [[fmt(it.value) + " min", "avg wait"], [it.visits.toLocaleString(), "visits"]]});
+  table("t-dept", ["Department", "Avg wait (min)", "Visits"], items.map(it => [it.label, fmt(it.value), it.visits]), [1, 2]);
+}
+
+function renderHour() {
+  const c = new Array(12).fill(0);
+  each(i => { if (D.st[i] !== 2) c[D.h[i] - 8]++; });
+  const days = state.d1 - state.d0 + 1, vals = c.map(v => v / days);
+  const H = 250, m = {l: 34, r: 8, t: 16, b: 24};
+  const [s, W] = makeSvg("c-hour", H), iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const sc = niceScale(Math.max(...vals)), ymax = sc.max, bw = iw / 12;
+  const Y = v => m.t + ih - v / ymax * ih;
+  sc.ticks.forEach(v => { el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: css(v ? "--grid" : "--axis")}, s); txt(s, m.l - 6, Y(v) + 4, v, {"text-anchor": "end"}); });
+  const peak = vals.indexOf(Math.max(...vals)), total = c.reduce((a, b) => a + b, 0);
+  document.getElementById("hour-desc").textContent =
+    `${fmt(100 * (c[1] + c[2] + c[3] + c[4]) / total, 0)}% of patients arrive between 09:00 and 12:59.`;
+  vals.forEach((v, j) => {
+    const x = m.l + j * bw + 1, w = bw - 2;
+    const bar = el("path", {d: barPath(x, Y(v), w, Y(0) - Y(v), false), fill: css("--series-1")}, s);
+    if (j === peak) txt(s, x + w / 2, Y(v) - 5, fmt(v), {"text-anchor": "middle", class: "val"});
+    txt(s, x + w / 2, H - 8, hourLabel(j + 8), {"text-anchor": "middle"});
+    const hit = el("rect", {x: m.l + j * bw, y: m.t, width: bw, height: ih, class: "hit"}, s);
+    hoverable(hit, ev => { bar.classList.add("mark-hover"); showTip(ev, `${hourLabel(j + 8)}–${hourLabel(j + 9)}`, [[fmt(v), "arrivals / day"], [fmt(100 * c[j] / c.reduce((a, b) => a + b, 0)) + "%", "of daily arrivals"]]); });
+    hit.addEventListener("pointerleave", () => bar.classList.remove("mark-hover"));
+  });
+  table("t-hour", ["Hour", "Avg arrivals / day", "Share %"], vals.map((v, j) => [hourLabel(j + 8), fmt(v), fmt(100 * c[j] / c.reduce((a, b) => a + b, 0))]), [1, 2]);
+}
+
+// ---------- page 3 ----------
+function renderDoctors() {
+  const n = D.doctors.length, pts = new Array(n).fill(0), mins = new Array(n).fill(0), days = Array.from({length: n}, () => new Set());
+  each(i => { const o = D.o[i]; if (o >= 0 && D.st[i] === 0) { pts[o]++; mins[o] += D.c[i] / 10; days[o].add(D.d[i]); } });
+  const docs = D.doctors.map((d, i) => ({...d, i, label: `${d.name} · ${D.depts[d.dept]}`, perDay: days[i].size ? pts[i] / days[i].size : 0,
+    avgC: pts[i] ? mins[i] / pts[i] : 0, value: days[i].size ? 100 * mins[i] / (days[i].size * d.shift * 60) : 0}))
+    .filter(d => state.dept < 0 || d.dept === state.dept).sort((a, b) => b.value - a.value);
+  hbar("c-fat", docs, {unit: "%", digits: 0, ref: 100, highlight: d => d.value >= 90,
+    tipRows: d => [[fmt(d.value, 0) + "%", "of shift"], [fmt(d.perDay), "patients / day"], [fmt(d.avgC) + " min", "avg consultation"]]});
+  table("t-doc", ["Doctor", "Department", "Patients / day", "Avg consult (min)", "Fatigue index"],
+    docs.map(d => [d.name, D.depts[d.dept], fmt(d.perDay), fmt(d.avgC), fmt(d.value, 0) + "%"]), [2, 3, 4]);
+}
+
+function render() {
+  hideTip();
+  renderKpis();
+  const active = document.querySelector(".page.active").id;
+  if (active === "p1") renderTrend();
+  if (active === "p2") { renderHeat(); renderDept(); renderHour(); }
+  if (active === "p3") renderDoctors();
+}
+render();
+</script>
+</body>
+</html>

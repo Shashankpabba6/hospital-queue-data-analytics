@@ -9,7 +9,11 @@ impact of the **severity-priority queue**, and recommend staffing changes.
 **Stack:** Python (Pandas, NumPy, SciPy) · SQL (SQLite / MySQL 8, CTEs & window functions) ·
 Star-schema data modeling · Matplotlib & Seaborn · Jupyter · Excel (openpyxl) · Power BI (DAX)
 
-![Department bottleneck](reports/figures/02_department_bottleneck.png)
+### 📊 [Live interactive dashboard →](https://shashankpabba6.github.io/hospital-queue-data-analytics/)
+A 3-page KPI dashboard (operations overview, bottlenecks, doctor workload) with department and
+date-range slicers. It computes the same measures as the Power BI model in [`dashboard/`](dashboard/).
+
+![Dashboard: operations overview](reports/figures/dashboard_page1_overview.png)
 
 ## Key findings (90 days · 27,706 bookings · 7 departments · 12 doctors)
 
@@ -68,6 +72,7 @@ load_db.py         →  hospital_queue.db              star schema + row-count r
 run_sql_analysis.py→  reports/sql_results/*.csv      10 analytical SQL queries
 build_notebook.py  →  notebooks/hospital_queue_eda.ipynb   EDA, statistical tests, charts
 build_excel_report.py → dashboard/Hospital_Queue_KPI_Report.xlsx
+build_web_dashboard.py → docs/index.html              interactive dashboard (GitHub Pages)
 ```
 
 ```bash
@@ -111,6 +116,7 @@ its Staff Fatigue Index. The analytics therefore score patients exactly as the p
 | [`notebooks/hospital_queue_eda.ipynb`](notebooks/hospital_queue_eda.ipynb) | Full EDA with 7 charts and ANOVA, χ² and paired t-tests |
 | [`dashboard/Hospital_Queue_KPI_Report.xlsx`](dashboard/Hospital_Queue_KPI_Report.xlsx) | Excel report: KPI summary, pivot summaries, heatmap, native charts |
 | [`dashboard/powerbi_measures.dax`](dashboard/powerbi_measures.dax) | 14 DAX measures (P90 wait, no-show rate, fatigue index, 7-day MA, WoW %) |
+| [`docs/index.html`](docs/index.html) | Interactive web dashboard ([live](https://shashankpabba6.github.io/hospital-queue-data-analytics/)): 6 KPI cards, slicers, tooltips, data tables, light/dark |
 | [`dashboard/POWERBI_DASHBOARD.md`](dashboard/POWERBI_DASHBOARD.md) | 3-page Power BI layout with 6 KPI visuals; model CSVs in `dashboard/powerbi_data/` |
 | [`reports/figures/`](reports/figures) | Exported charts |
 

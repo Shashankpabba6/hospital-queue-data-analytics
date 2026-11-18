@@ -5,7 +5,8 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parent / "src"
 STEPS = ["generate_data.py", "etl.py", "simulate_queue.py", "load_db.py",
-         "run_sql_analysis.py", "build_notebook.py", "build_excel_report.py"]
+         "run_sql_analysis.py", "build_notebook.py", "build_excel_report.py",
+         "build_web_dashboard.py"]
 
 for step in STEPS:
     print(f"\n>>> {step}")
